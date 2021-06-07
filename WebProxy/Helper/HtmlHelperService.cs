@@ -1,4 +1,5 @@
 using System.Text;
+using HtmlAgilityPack;
 
 namespace WebProxy.Helper
 {
@@ -14,13 +15,27 @@ namespace WebProxy.Helper
         public static string InsertCharAfterEveryWordWithNCharsInContent(string html, char charToInsert,
             uint requiredWordLength)
         {
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            var bodyDivs = doc.DocumentNode.SelectNodes("html/body/div");
+
+            foreach (var div in bodyDivs)
+            {
+                div.InnerHtml = InsertChar(div.InnerHtml, charToInsert, requiredWordLength);
+            }
+            
+            return doc.Text;
+        }
+
+        private static string InsertChar(string html, char charToInsert, uint requiredWordLength)
+        {
             var builder = new StringBuilder();
             var wordCharsCount = 0;
             var isWordInContent = false;
             for (var i = 0; i < html.Length; i++)
             {
                 builder.Append(html[i]);
-
                 if (html[i] == '<')
                 {
                     isWordInContent = false;
