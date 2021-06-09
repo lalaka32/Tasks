@@ -18,21 +18,24 @@ namespace WebProxy.Helper
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
 
-            var bodyDivs = doc.DocumentNode.SelectNodes("html/body/div");
+            var bodyDivs = doc.DocumentNode.SelectNodes("//body//text()[(normalize-space(.) != '') and not(parent::script or style) and not(*)]");
 
+            if (bodyDivs == null)
+            {
+                return string.Empty;
+            }
             foreach (var div in bodyDivs)
             {
-                div.InnerHtml = InsertChar(div.InnerHtml, charToInsert, requiredWordLength);
+                div.InnerHtml = InsertChar(div.InnerText, charToInsert, requiredWordLength);
             }
-            
-            return doc.Text;
+            return doc.DocumentNode.InnerHtml;
         }
 
         private static string InsertChar(string html, char charToInsert, uint requiredWordLength)
         {
             var builder = new StringBuilder();
             var wordCharsCount = 0;
-            var isWordInContent = false;
+            var isWordInContent = true;
             for (var i = 0; i < html.Length; i++)
             {
                 builder.Append(html[i]);
@@ -43,7 +46,7 @@ namespace WebProxy.Helper
 
                 if (isWordInContent && char.IsLetter(html[i]))
                 {
-                    if (++wordCharsCount == requiredWordLength && !char.IsLetter(html[i + 1]))
+                    if (++wordCharsCount == requiredWordLength && ( i == html.Length -1 || !char.IsLetter(html[i + 1])))
                     {
                         builder.Append(charToInsert);
                     }
